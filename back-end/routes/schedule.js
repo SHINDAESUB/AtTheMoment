@@ -2,14 +2,14 @@ const express = require('express')
 const fs = require('fs');
 const router = express.Router()
 
-router.get("/list" , (req ,res) => {
+router.get("/" , (req ,res) => {
     const dataBuffer = fs.readFileSync('./json/schedule.json')
     const schedule = JSON.parse(dataBuffer.toString())    
     let result = schedule
     res.send(result)
 })
 
-router.post("/add" , (req ,res) => {    
+router.post("/reservation" , (req ,res) => {    
     const uid = JSON.parse(fs.readFileSync('./json/uid.json').toString())
     const schedule = JSON.parse(fs.readFileSync('./json/schedule.json').toString())
 
@@ -33,7 +33,7 @@ router.post("/add" , (req ,res) => {
 })
 
 
-router.delete("/delete" , (req ,res) => {    
+router.delete("/reservation" , (req ,res) => {    
     const schedule = JSON.parse(fs.readFileSync('./json/schedule.json').toString())
     
     schedule.splice(req.query.index, 1)

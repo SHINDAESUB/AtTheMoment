@@ -20,7 +20,7 @@ router.post("/reservation" , (req ,res) => {
     add.startTime = req.body.startTime
     add.endTime = req.body.endTime
     add.room = req.body.room
-    add.use = req.body.use
+    add.use = false
 
     schedule.push(add)
 

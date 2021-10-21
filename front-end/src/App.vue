@@ -148,7 +148,7 @@
     </v-col>
   </v-footer>
     <v-fab-transition>
-      <v-btn
+    <v-btn
         color="yellow"
         fab
         large
@@ -156,11 +156,10 @@
         bottom
         right
         fixed
-        
+        @click="kakaoChannelChat()"
       >
-        <v-img src="../src/assets/kakao.png" height="64" width="64"></v-img>
-        <!-- https://webruden.tistory.com/354 -->
-      </v-btn>
+        <v-img src="../src/assets/kakao.png" height="64" width="64" ></v-img>
+      </v-btn> 
 
     </v-fab-transition>
   </v-app>
@@ -170,6 +169,8 @@
 import Header from '../src/components/Header.vue'
 
 export default {
+
+
   name: 'App',
 
   data: () => ({
@@ -181,7 +182,6 @@ export default {
         { title: 'C ROOM' },
       ],
       text: null, 
-
 
       admins: [
         ['Management', 'mdi-account-multiple-outline'],
@@ -195,6 +195,14 @@ export default {
       ],
 
   }),
+
+  methods:{
+    kakaoChannelChat(){
+      Kakao.Channel.chat({
+        channelPublicId: '_VKVIb'
+      })
+    }
+  },
 
   components:{
     Header

@@ -2,11 +2,11 @@
     <v-container >
         <v-card
             width="1250"
-            class="mx-auto px-2 elevation-0"
+            class="mx-auto px-2 elevation-0 pa-2"
             height="100%"
             outlined
         >
-            <form>
+            <form >
                 <v-text-field
                     v-model="name"
                     :error-messages="nameErrors"
@@ -34,10 +34,21 @@
                     @blur="$v.startDate.$touch()"
                 ></v-text-field>
                 <v-text-field
+                    v-model="startTime"
+                    :error-messages="startTimeErrors"
+                    label="예약 시간"
+                    type="time"
+                    required
+                    @input="$v.startTime.$touch()"
+                    @blur="$v.startTime.$touch()"
+                ></v-text-field>
+                <v-text-field
                     v-model="useTime"
                     :error-messages="useTimeErrors"
-                    label="사용 시간"
-                    type="time"
+                    label="이용 시간"
+                    type="number"
+                    min="1"
+                    max="5"
                     required
                     @input="$v.useTime.$touch()"
                     @blur="$v.useTime.$touch()"
@@ -63,22 +74,23 @@
                     @change="$v.checkbox.$touch()"
                     @blur="$v.checkbox.$touch()"
                 ></v-checkbox>
+                
                 <v-btn
-                    class="mr-4"
+                    class="mr-4 "
+                    color="primary"
+                    block
                     @click="submit"
                 >
-                submit
+                  신청
                 </v-btn>
-                <v-btn @click="clear">
-                    clear
-                </v-btn>
-                <v-spacr/>
             </form>
         </v-card>
     </v-container>
 </template>
 
 <script>
+  import schedule from '../services/schedule'
+
   import { validationMixin } from 'vuelidate'
   import { required, maxLength ,numeric } from 'vuelidate/lib/validators'
 
@@ -91,6 +103,7 @@
       room: { required },
       startDate: { required },
       useTime: { required ,numeric },
+      startTime:{required },
       checkbox: {
         checked (val) {
           return val
@@ -100,15 +113,16 @@
     },
 
     data: () => ({
-      name: '',
-      phone: '',
+      name:'',
+      phone:'',
       room: null,
-      startDate: '',
-      useTime:null,
+      startDate:'',
+      startTime:'',
+      useTime:1,
       rooms: [
-        'A Room',
-        'B Room',
-        'C Room',
+        'A',
+        'B',
+        'C',
       ],
       checkbox: false,
     }),
@@ -145,6 +159,13 @@
         !this.$v.phone.required && errors.push('입력해주세요')
         return errors
       },
+      startTimeErrors () {
+        const errors = []
+        if (!this.$v.startTime.$dirty) return errors
+        !this.$v.startTime.required && errors.push('입력해주세요')
+        return errors
+      },
+
       useTimeErrors () {
         const errors = []
         if (!this.$v.useTime.$dirty) return errors
@@ -156,16 +177,35 @@
     },
 
     methods: {
-      submit () {
-        this.$v.$touch()
+      async submit () {
+        this.$v.$touch();
+
+        if(process.env.VUE_APP_ADMIN === this.name && process.env.VUE_APP_PHONE === this.phone )  this.$router.push('user' )
+
+        if (this.$v.$invalid) {
+          return;
+        }else{
+          let reservation = { 'name':this.name , 'phone':this.phone , 'room':this.room , 'startDate':this.startDate , 'startTime':this.startTime, 'useTime': this.useTime , 'room': this.room}
+          try{
+            let response =  await schedule.add(reservation)              
+              if(response.status !== 200) throw new Error(response)
+              this.clear()
+              alert('신청 되었습니다. \n입금확인 후 연락 드리겠습니다.')
+            }catch(e){
+              alert(`서버에 문제가 발생했습니다 \n카카오톡으로 문의 주시면 감사하겠습니다. \n${e}`)
+            }
+
+          }
       },
+
       clear () {
         this.$v.$reset()
         this.name = ''
         this.phone = ''
         this.room = null
         this.startDate = ''
-        this.useTime = null
+        this.useTime = 1
+        this.startTime = null
         this.checkbox = false
       },
     },

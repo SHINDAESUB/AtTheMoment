@@ -129,6 +129,8 @@
 </template>
 
 <script>
+  import schedule from '../services/schedule'
+
   export default {
     data: () => ({
       focus: '',
@@ -145,11 +147,30 @@
       events: [],
       colors: ['blue', 'indigo', 'deep-purple', 'cyan', 'green', 'orange', 'grey darken-1'],
       names: ['Meeting', 'Holiday', 'PTO', 'Travel', 'Event', 'Birthday', 'Conference', 'Party'],
+
+      reservation:[],
     }),
+
+    created() {
+      this.getSchedule()
+    },
+
     mounted () {
       this.$refs.calendar.checkChange()
     },
     methods: {
+      async getSchedule(){
+          try {
+            let result = await schedule.schedule()
+            this.reservation = result
+
+            console.log('this.reservation :',this.reservation)
+
+          } catch (e) {
+            console.error(e)
+          }
+      },
+
       viewDay ({ date }) {
         this.focus = date
         this.type = 'day'

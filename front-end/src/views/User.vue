@@ -5,7 +5,7 @@
         <v-text-field
           v-model="search"
           append-icon="mdi-magnify"
-          label="Search"
+          label="검색"
           hide-details
         ></v-text-field>
       </v-card-title>
@@ -14,6 +14,8 @@
         :items="reservation"
         :search="search"
         item-key="uid"
+        :sort-by="'uid'"
+        :sort-desc="true"
       >
           <template v-slot:top>
             <v-toolbar
@@ -31,7 +33,7 @@
                     v-bind="attrs"
                     v-on="on"
                   >
-                    New Item
+                    예약 추가
                   </v-btn>
                 </template>
                 <v-card>
@@ -48,8 +50,9 @@
                           md="4"
                         >
                           <v-text-field
-                            v-model="editedItem.name"
+                            v-model="editedReservation.name"
                             label="이름"
+                            required
                           ></v-text-field>
                         </v-col>
                         <v-col
@@ -58,8 +61,9 @@
                           md="4"
                         >
                           <v-text-field
-                            v-model="editedItem.phone"
+                            v-model="editedReservation.phone"
                             label="연락처"
+                            required
                           ></v-text-field>
                         </v-col>
                         <v-col
@@ -68,8 +72,10 @@
                           md="4"
                         >
                           <v-text-field
-                            v-model="editedItem.startTime"
-                            label="시작 시간"
+                            v-model="editedReservation.startDate"
+                            type="date"
+                            label="예약날짜"
+                            required
                           ></v-text-field>
                         </v-col>
                         <v-col
@@ -78,8 +84,10 @@
                           md="4"
                         >
                           <v-text-field
-                            v-model="editedItem.endTime"
-                            label="종료 시간"
+                            v-model="editedReservation.startTime"
+                            type="time"
+                            label="예약시간"
+                            required
                           ></v-text-field>
                         </v-col>
                         <v-col
@@ -88,8 +96,10 @@
                           md="4"
                         >
                           <v-text-field
-                            v-model="editedItem.room"
-                            label="스튜디오"
+                            v-model="editedReservation.useTime"
+                            type="number"
+                            label="이용시간"
+                            required
                           ></v-text-field>
                         </v-col>
                         <v-col
@@ -97,10 +107,22 @@
                           sm="6"
                           md="4"
                         >
-                          <v-text-field
-                            v-model="editedItem.use"
-                            label="입금확인"
-                          ></v-text-field>
+                          <v-select
+                              v-model="editedReservation.room"
+                              :items="rooms"
+                              label="스튜디오"
+                              required
+                          ></v-select>
+                        </v-col>
+                        <v-col
+                          cols="12"
+                          sm="6"
+                          md="4"
+                        >
+                          <v-checkbox
+                            v-model="editedReservation.use"
+                            label="입금 확인"
+                          ></v-checkbox>
                         </v-col>
                       </v-row>
                     </v-container>
@@ -125,22 +147,29 @@
                   </v-card-actions>
                 </v-card>
             </v-dialog>
-            <v-dialog v-model="dialogDelete" max-width="500px">
+            <v-dialog v-model="dialogDelete" max-width="400px">
               <v-card>
-                <v-card-title class="text-h5">예약 삭제 하시겠습니까?</v-card-title>
+                <v-card-title class="text-h6">삭제 하시겠습니까?</v-card-title>
                 <v-card-actions>
                   <v-spacer></v-spacer>
-                  <v-btn color="blue darken-1" text @click="closeDelete">취소</v-btn>
                   <v-btn color="blue darken-1" text @click="deleteItemConfirm">확인</v-btn>
-                  <v-spacer></v-spacer>
+                  <v-btn color="blue darken-1" text @click="closeDelete">취소</v-btn>
                 </v-card-actions>
               </v-card>
             </v-dialog>
           </v-toolbar>
         </template>
-        <template v-slot:item.actions="{ item  }">
+        <template v-slot:[`item.use`]="{ item }">
+          <v-checkbox
+            v-model="item.use"
+            @click="updateUseItem(item)"
+          ></v-checkbox>
+        </template>
+
+        <template v-slot:[`item.actions`]="{ item }">
           <v-icon
             small
+            color="primary"
             class="mr-2"
             @click="editItem(item)"
           >
@@ -148,6 +177,7 @@
           </v-icon>
           <v-icon
             small
+            color="error"
             @click="deleteItem(item)"
           >
             mdi-delete
@@ -169,22 +199,29 @@
 
         dialog: false,
         dialogDelete: false,
+        rooms: [
+          'A',
+          'B',
+          'C',
+        ],
 
         editedIndex: -1,
-        editedItem: {
+        editedReservation: {
           name: '',
           phone: '',
-          startTime: '',
-          endTime: '',
-          room: 'A',
+          room: null,
+          startDate: '',
+          useTime: 1,
+          startTime: null,
           use:false,
         },
-        defaultItem: {
+        defaultReservation: {
           name: '',
           phone: '',
-          startTime: '',
-          endTime: '',
-          room: 'A',
+          room: null,
+          startDate: '',
+          useTime: 1,
+          startTime: null,
           use:false,
         },
 
@@ -200,20 +237,19 @@
         return [
           { text: '이름', align: 'start', sortable: false, value: 'name'},
           { text: '연락처', value: 'phone'},
-          { text: '시작 시간', value: 'startTime'},
-          { text: '종료 시간', value: 'endTime' },
+          { text: '예약 날짜', value: 'startDate'},
+          { text: '예약 시간', value: 'startTime' },
+          { text: '이용 시간', value: 'useTime' },
           { text: '스튜디오', value: 'room' },
-          { text: '입금 확인', value: 'use' },
-          { text: '변경', value: 'actions' },
+          { text: '요금 확인', value: 'use' },
+          { text: '액션', value: 'actions' },
         ]
       },
 
       formTitle () {
-        return this.editedIndex === -1 ? 'New Item' : 'Edit Item'
+        return this.editedIndex === -1 ? '예약 추가' : '예약 변경'
       },
     },
-
-
 
     watch: {
       dialog (val) {
@@ -227,40 +263,44 @@
     methods:{
       async getSchedule(){
           try {
-            let result = await schedule.list()
+            let result = await schedule.schedule()
             this.reservation = result
           } catch (e) {
             console.error(e)
           }
       },
-    
-      editItem (item) {
+
+      async updateSchedule(){
+          try {
+            let result = await schedule.schedule()
+            this.reservation = result
+          } catch (e) {
+            console.error(e)
+          }
+      },
+
+      editItem(item) {
         this.editedIndex = this.reservation.indexOf(item)
-        this.editedItem = Object.assign({}, item)
+        this.editedReservation = Object.assign({}, item)
         this.dialog = true
+      },
+
+      updateUseItem(updateReservation){
+        this.editedIndex = this.reservation.indexOf(updateReservation)
+        this.editedReservation = Object.assign({}, updateReservation)
+        this.updateConfirm(this.editedIndex ,this.editedReservation )
       },
 
       deleteItem (item) {
         this.editedIndex = this.reservation.indexOf(item)
-        this.editedItem = Object.assign({}, item)
+        this.editedReservation = Object.assign({}, item)
         this.dialogDelete = true
-      },
-
-      async deleteItemConfirm () {
-          try {
-            let result = await schedule.delete(this.editedIndex)
-            if(result) this.reservation.splice(this.editedIndex, 1)
-          } catch (e) {
-            console.error(e)
-          }finally{
-            this.closeDelete()
-          }
       },
 
       close () {
         this.dialog = false
         this.$nextTick(() => {
-          this.editedItem = Object.assign({}, this.defaultItem)
+          this.editedReservation = Object.assign({}, this.defaultReservation)
           this.editedIndex = -1
         })
       },
@@ -268,21 +308,50 @@
       closeDelete () {
         this.dialogDelete = false
         this.$nextTick(() => {
-          this.editedItem = Object.assign({}, this.defaultItem)
+          this.editedReservation = Object.assign({}, this.defaultReservation)
           this.editedIndex = -1
         })
       },
 
-      async save () {
-        if (this.editedIndex > -1) {
-          Object.assign(this.reservation[this.editedIndex], this.editedItem)
-        } else {
+      async updateConfirm(index , updateReservation){
+        try {
+          let result = await schedule.update(index , updateReservation)
+          if(result.status !== 200) throw new Error(result)
+          Object.assign(this.reservation[index], updateReservation)
+          alert('변경 완료')
+        } catch (e) {
+          alert(`변경 실패 \n${e}`)
+        }
+      },
+
+      async deleteItemConfirm() {
           try {
-            let result = await schedule.add(this.editedItem)
-            if(result) this.reservation.push(this.editedItem)
+            let result = await schedule.delete(this.editedIndex)
+            if(result.status !== 200) throw new Error(result)
+            this.reservation.splice(this.editedIndex, 1)
+            alert('변경 완료')
+          } catch (e) {
+            alert(`변경 실패 \n${e}`)
+          }finally{
+            this.closeDelete()
+          }
+      },
+
+      async addItemConfirm(reservation) {
+          try {
+            let result = await schedule.add(reservation)
+            if(result.status !== 200) throw new Error(result)
+            this.reservation.push(result.data)
           } catch (e) {
             console.error(e)
           }
+      },
+
+      async save () {
+        if (this.editedIndex > -1) {
+          this.updateConfirm(this.editedIndex ,this.editedReservation )
+        } else {
+          this.addItemConfirm(this.editedReservation)
         }
         this.close()
       },

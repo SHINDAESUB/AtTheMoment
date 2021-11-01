@@ -11,6 +11,16 @@ export default {
         }
     },
 
+    async status(){
+        try{
+            const response = await axios.get('/schedule/status')
+            return response.data
+        }catch (e) { 
+            console.log(e)
+            throw e 
+        }
+    },
+
     async add(reservation){
         try{
             const response = await axios.post('/schedule/reservation' , reservation)

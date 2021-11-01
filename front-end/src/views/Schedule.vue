@@ -73,13 +73,12 @@
                 ref="calendar"
                 v-model="focus"
                 color="primary"
-                :events="events"
+                :events="reservations"
                 :event-color="getEventColor"
                 :type="type"
                 @click:event="showEvent"
                 @click:more="viewDay"
                 @click:date="viewDay"
-                @change="updateRange"
             />
             <v-menu
                 v-model="selectedOpen"
@@ -96,28 +95,23 @@
                     :color="selectedEvent.color"
                     dark
                     >
-                    <v-btn icon>
-                        <v-icon>mdi-pencil</v-icon>
-                    </v-btn>
                     <v-toolbar-title v-html="selectedEvent.name"></v-toolbar-title>
                     <v-spacer></v-spacer>
-                    <v-btn icon>
-                        <v-icon>mdi-heart</v-icon>
-                    </v-btn>
-                    <v-btn icon>
-                        <v-icon>mdi-dots-vertical</v-icon>
-                    </v-btn>
                     </v-toolbar>
                     <v-card-text>
-                    <span v-html="selectedEvent.details"></span>
+                    <p>성함  : {{selectedEvent.name}}</p>
+                    <p>스튜디오 : {{colorToRoom(selectedEvent.color)}} ROOM</p>
+                    <p>시작시간 : {{selectedEvent.start}}</p>
+                    <p>종료시간 : {{selectedEvent.end}}</p>
                     </v-card-text>
                     <v-card-actions>
+                    <v-spacer/>
                     <v-btn
                         text
                         color="secondary"
                         @click="selectedOpen = false"
                     >
-                        Cancel
+                        확인
                     </v-btn>
                     </v-card-actions>
                 </v-card>
@@ -136,19 +130,15 @@
       focus: '',
       type: 'month',
       typeToLabel: {
-        month: 'Month',
-        week: 'Week',
-        day: 'Day',
-        '4day': '4 Days',
+        month: '월',
+        week: '주',
+        day: '일',
       },
       selectedEvent: {},
       selectedElement: null,
       selectedOpen: false,
-      events: [],
-      colors: ['blue', 'indigo', 'deep-purple', 'cyan', 'green', 'orange', 'grey darken-1'],
-      names: ['Meeting', 'Holiday', 'PTO', 'Travel', 'Event', 'Birthday', 'Conference', 'Party'],
 
-      reservation:[],
+      reservations:[],
     }),
 
     created() {
@@ -158,13 +148,13 @@
     mounted () {
       this.$refs.calendar.checkChange()
     },
+
     methods: {
       async getSchedule(){
           try {
-            let result = await schedule.schedule()
-            this.reservation = result
+            let result = await schedule.status()
 
-            console.log('this.reservation :',this.reservation)
+            this.reservations = result
 
           } catch (e) {
             console.error(e)
@@ -203,34 +193,21 @@
 
         nativeEvent.stopPropagation()
       },
-      updateRange ({ start, end }) {
-        const events = []
 
-        const min = new Date(`${start.date}T00:00:00`)
-        const max = new Date(`${end.date}T23:59:59`)
-        const days = (max.getTime() - min.getTime()) / 86400000
-        const eventCount = this.rnd(days, days + 20)
-
-        for (let i = 0; i < eventCount; i++) {
-          const allDay = this.rnd(0, 3) === 0
-          const firstTimestamp = this.rnd(min.getTime(), max.getTime())
-          const first = new Date(firstTimestamp - (firstTimestamp % 900000))
-          const secondTimestamp = this.rnd(2, allDay ? 288 : 8) * 900000
-          const second = new Date(first.getTime() + secondTimestamp)
-
-          events.push({
-            name: this.names[this.rnd(0, this.names.length - 1)],
-            start: first,
-            end: second,
-            color: this.colors[this.rnd(0, this.colors.length - 1)],
-            timed: !allDay,
-          })
+      colorToRoom(color){
+        let room
+        switch(color){
+            case 'green' :
+                room = 'A'
+                break;
+            case 'orange' :
+                room = 'B'
+                break;
+            case 'blue' :
+                room = 'C'
+                break;
         }
-
-        this.events = events
-      },
-      rnd (a, b) {
-        return Math.floor((b - a + 1) * Math.random()) + a
+        return room
       },
     },
   }

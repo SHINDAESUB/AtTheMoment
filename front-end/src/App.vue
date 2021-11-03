@@ -21,7 +21,7 @@
         color="deep-purple accent-3 "
         group
       >
-        <v-btn value="left" class="subtitle-1 font-weight-bold" to="/guide">
+        <v-btn  class="subtitle-1 font-weight-bold" to="/guide">
           이용안내
         </v-btn>
 
@@ -48,20 +48,20 @@
           </v-list>
         </v-menu>
 
-        <v-btn value="right" class="subtitle-1 font-weight-bold" to="/schedule">
+        <v-btn  class="subtitle-1 font-weight-bold" to="/schedule">
           예약현황
         </v-btn>
 
-        <v-btn value="justify" class="subtitle-1 font-weight-bold" to="/reservation">
+        <v-btn  class="subtitle-1 font-weight-bold" to="/reservation">
           예약신청
         </v-btn>
 
-        <v-btn value="justify2" class="subtitle-1 font-weight-bold" to="/location">
+        <v-btn  class="subtitle-1 font-weight-bold" to="/location">
           위치
         </v-btn>
       </v-btn-toggle>
       <v-spacer/>
-      <v-btn color="grey" icon ><v-icon>
+      <v-btn color="grey" icon href="https://www.instagram.com/studio__atm/"><v-icon>
         mdi-instagram
         </v-icon>  </v-btn>
 
